@@ -9,7 +9,7 @@ type ConnectionPageProps = NativeStackScreenProps<
 
 const ConnectionPage = ({route}: ConnectionPageProps) => {
   const code =
-    route.params.code ?? (Math.random() + 1).toString(36).substring(4);
+    route.params.code ?? (Math.random() + 1).toString(36).substring(4, 8);
 
   return (
     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
