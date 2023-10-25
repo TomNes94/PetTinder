@@ -1,0 +1,260 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  pet-tinder-backend
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+  - AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  postCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/session.postCodeHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/session.ts
+
+  getSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/session.getSessionHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /{sessionId}
+            Method: GET
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/session.ts
+
+  createUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create-user.createUserHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user
+            Method: PUT
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/create-user.ts
+
+  acceptInviteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create-user.acceptInviteHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user/accept_invite
+            Method: PUT
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/create-user.ts
+
+  getLikesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/like.getLikeHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /likes/{sessionId}
+            Method: GET
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/like.ts
+
+  setLikeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/like.setLikeHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /likes
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/like.ts
+
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: Session
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+        - AttributeName: Type
+          AttributeType: S
+        - AttributeName: Code
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+        - AttributeName: Type
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+        - IndexName: CodeIndex
+          KeySchema:
+            - AttributeName: Code
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 3
+            WriteCapacityUnits: 2
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/"

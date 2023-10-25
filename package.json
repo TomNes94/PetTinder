@@ -1,0 +1,19 @@
+{
+  "name": "pet-tinder",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "ios": "cd ./app && yarn ios",
+    "server": "cd ./-backend && sam local start-api"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TomNes94/PetTinder.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TomNes94/PetTinder/issues"
+  },
+  "homepage": "https://github.com/TomNes94/PetTinder#readme"
+}

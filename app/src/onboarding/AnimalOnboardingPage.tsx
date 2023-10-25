@@ -9,13 +9,16 @@ import {
   View,
 } from 'react-native';
 import {useState} from 'react';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {createSession} from '../api/session';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type OnboardingPageProps = NativeStackScreenProps<
   RootStackParamList,
-  Pages.ONBOARDING
+  Pages.ANIMAL_ONBOARDING
 >;
 
-const OnboardingPage = ({navigation}: OnboardingPageProps) => {
+const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
   const [selectedGender, setSelectedGender] = useState<
     null | 'male' | 'female'
   >(null);
@@ -26,7 +29,15 @@ const OnboardingPage = ({navigation}: OnboardingPageProps) => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState('');
 
-  console.log(!(selectedCategory && selectedGender) && code.length === 4);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation(['session'], {
+    mutationFn: createSession,
+    onSuccess: data => {
+      queryClient.setQueryData(['session'], data);
+      queryClient.invalidateQueries(['session']);
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -110,9 +121,22 @@ const OnboardingPage = ({navigation}: OnboardingPageProps) => {
           <Text style={styles.codeButton}>I have a code</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate(Pages.CONNECTION, {code: code ? code : null})
-          }
+          onPress={async () => {
+            if (code) {
+              navigation.navigate(Pages.NAME_ONBOARDING, {
+                code,
+              });
+            } else {
+              const newCode = (Math.random() + 1).toString(36).substring(4, 8);
+              const response = await mutation.mutateAsync({code: newCode, gender: selectedGender, });
+
+              await AsyncStorage.setItem('sessionId', response.data.id);
+
+              navigation.navigate(Pages.NAME_ONBOARDING, {
+                code: null,
+              });
+            }
+          }}
           disabled={!(selectedCategory && selectedGender) && code.length !== 4}
           style={[
             styles.button,
@@ -178,4 +202,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardingPage;
+export default AnimalOnboardingPage;
