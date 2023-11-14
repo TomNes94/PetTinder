@@ -19,6 +19,8 @@ export const createSession = ({
 export type Session = {
   id: string;
   code: string;
+  gender: string;
+  animalType: string;
   users: {
     requester: User;
     addressee?: User;
@@ -26,5 +28,6 @@ export type Session = {
   likes: ListOfLikes;
 };
 
-export const getSession = (sessionId: string) =>
-  client.get<Session>(`/${sessionId}`);
+export const getSessionByCode = (code: string) =>
+  client.get<Session>(`/code/${code}`);
+export const getSessionById = (id: string) => client.get<Session>(`/${id}`);

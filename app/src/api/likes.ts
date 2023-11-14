@@ -1,7 +1,7 @@
 import client from './base';
 
 export type ListOfLikes = {
-  adresseeLike?: boolean;
+  addresseeLike?: boolean;
   requesterLike?: boolean;
   name: string;
 }[];

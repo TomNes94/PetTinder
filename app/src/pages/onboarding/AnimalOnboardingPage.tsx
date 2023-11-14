@@ -1,5 +1,5 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Pages, RootStackParamList} from '../navigation/RootNavigator';
+import {Pages, RootStackParamList} from '../../navigation/RootNavigator';
 import {
   Image,
   StyleSheet,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {useState} from 'react';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
-import {createSession} from '../api/session';
+import {createSession, getSessionByCode} from '../../api/session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type OnboardingPageProps = NativeStackScreenProps<
@@ -31,8 +31,16 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
 
   const queryClient = useQueryClient();
 
-  const mutation = useMutation(['session'], {
+  const createSessionMutation = useMutation(['session'], {
     mutationFn: createSession,
+    onSuccess: data => {
+      queryClient.setQueryData(['session'], data);
+      queryClient.invalidateQueries(['session']);
+    },
+  });
+
+  const getSessionMutation = useMutation(['session'], {
+    mutationFn: getSessionByCode,
     onSuccess: data => {
       queryClient.setQueryData(['session'], data);
       queryClient.invalidateQueries(['session']);
@@ -48,7 +56,7 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
             maxLength={4}
             style={styles.input}
             value={code}
-            autoCapitalize="characters"
+            autoCapitalize="none"
             autoCorrect={false}
             autoComplete="off"
             onChangeText={setCode}
@@ -64,7 +72,7 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
                 ]}>
                 <Image
                   style={styles.animalIcon}
-                  source={require('../assets/cat.png')}
+                  source={require('../../assets/cat.png')}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -75,7 +83,7 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
                 ]}>
                 <Image
                   style={styles.animalIcon}
-                  source={require('../assets/dog.png')}
+                  source={require('../../assets/dog.png')}
                 />
               </TouchableOpacity>
             </View>
@@ -93,7 +101,7 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
                 ]}>
                 <Image
                   style={styles.femaleIcon}
-                  source={require('../assets/female.png')}
+                  source={require('../../assets/female.png')}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -107,7 +115,7 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
                 ]}>
                 <Image
                   style={styles.maleIcon}
-                  source={require('../assets/male.png')}
+                  source={require('../../assets/male.png')}
                 />
               </TouchableOpacity>
             </View>
@@ -123,18 +131,24 @@ const AnimalOnboardingPage = ({navigation}: OnboardingPageProps) => {
         <TouchableOpacity
           onPress={async () => {
             if (code) {
-              navigation.navigate(Pages.NAME_ONBOARDING, {
-                code,
-              });
+              const sess = await getSessionMutation.mutateAsync(code);
+              await AsyncStorage.setItem('sessionId', sess.data.id);
+              navigation.navigate(Pages.NAME_ONBOARDING);
             } else {
+              if (!selectedGender || !selectedCategory) {
+                return;
+              }
               const newCode = (Math.random() + 1).toString(36).substring(4, 8);
-              const response = await mutation.mutateAsync({code: newCode, gender: selectedGender, });
+              const response = await createSessionMutation.mutateAsync({
+                code: newCode,
+                gender: selectedGender,
+                animalType: selectedCategory,
+              });
 
               await AsyncStorage.setItem('sessionId', response.data.id);
+              await AsyncStorage.setItem('code', newCode);
 
-              navigation.navigate(Pages.NAME_ONBOARDING, {
-                code: null,
-              });
+              navigation.navigate(Pages.NAME_ONBOARDING);
             }
           }}
           disabled={!(selectedCategory && selectedGender) && code.length !== 4}

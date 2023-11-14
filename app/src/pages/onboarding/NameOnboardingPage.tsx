@@ -1,5 +1,5 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Pages, RootStackParamList} from '../navigation/RootNavigator';
+import {Pages, RootStackParamList} from '../../navigation/RootNavigator';
 import {
   StyleSheet,
   Text,
@@ -9,19 +9,16 @@ import {
 } from 'react-native';
 import {useState} from 'react';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {putUser} from '../api/user';
+import {putUser} from '../../api/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getSessionById} from '../../api/session';
 
 type OnboardingPageProps = NativeStackScreenProps<
   RootStackParamList,
   Pages.NAME_ONBOARDING
 >;
 
-const NameOnboardingPage = ({navigation, route}: OnboardingPageProps) => {
-  const {
-    params: {code},
-  } = route;
-
+const NameOnboardingPage = ({navigation}: OnboardingPageProps) => {
   const [name, setName] = useState('');
 
   const queryClient = useQueryClient();
@@ -29,9 +26,19 @@ const NameOnboardingPage = ({navigation, route}: OnboardingPageProps) => {
   const {data: sessionId} = useQuery(['sessionId'], () =>
     AsyncStorage.getItem('sessionId'),
   );
+  const {data: code} = useQuery(['code'], () => AsyncStorage.getItem('code'));
+
+  const {data: session} = useQuery(
+    ['session', sessionId],
+    () => getSessionById(sessionId ?? ''),
+    {
+      enabled: !!sessionId,
+    },
+  );
 
   const mutation = useMutation(putUser, {
-    onSuccess: data => {
+    onSuccess: async data => {
+      await AsyncStorage.setItem('userId', data.data.id);
       queryClient.setQueryData(['user'], data);
       queryClient.invalidateQueries(['user']);
     },
@@ -60,9 +67,10 @@ const NameOnboardingPage = ({navigation, route}: OnboardingPageProps) => {
               name,
               sessionId,
             });
-            if (code === null) {
+
+            if (session?.data.users.requester) {
               navigation.navigate(Pages.SWIPE);
-            } else {
+            } else if (code) {
               navigation.navigate(Pages.CONNECTION, {code});
             }
           }}

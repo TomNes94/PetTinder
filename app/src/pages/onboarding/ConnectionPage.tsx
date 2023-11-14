@@ -1,5 +1,5 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Pages, RootStackParamList} from '../navigation/RootNavigator';
+import {Pages, RootStackParamList} from '../../navigation/RootNavigator';
 import {View, Text} from 'react-native';
 
 type ConnectionPageProps = NativeStackScreenProps<
