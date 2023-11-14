@@ -1,7 +1,7 @@
 import { AttributeValue, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import dynamoClient from "./client";
 
-export const upsert = ({
+export const put = ({
   table,
   updateExpression,
   key,

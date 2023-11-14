@@ -1,14 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { upsert } from "../storage/put";
 import { nanoid } from "nanoid";
-import { query } from "../storage/query";
-import { error } from "console";
-
-type ListOfLikes = {
-  adresseeLike?: boolean;
-  requesterLike?: boolean;
-  name: string;
-}[];
+import {
+  getSessionByCode,
+  getSessionById,
+} from "../services/sessions/getSession";
+import { getUser } from "../services/users/getUser";
+import { PostCodeSchema } from "../validation/postCode";
+import { createSession } from "../services/sessions/createSession";
 
 export const postCodeHandler = async (
   event: APIGatewayProxyEvent
@@ -22,88 +20,42 @@ export const postCodeHandler = async (
     };
   }
 
-  const body = JSON.parse(event.body);
+  const postCodeBody = PostCodeSchema.safeParse(event.body);
 
-  const item = {
-    Code: {
-      S: body.code,
-    },
-    Id: {
-      S: nanoid(10),
-    },
+  if (!postCodeBody.success) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        error: postCodeBody.error,
+      }),
+    };
+  }
+
+  const session = {
+    code: postCodeBody.data.code,
+    gender: postCodeBody.data.gender,
+    animalType: postCodeBody.data.animalType,
+    id: nanoid(10),
   };
-  console.log({
-    table: "Session",
-    key: { Id: item.Id, Type: { S: "Session" } },
-    expressionAttributeValues: {
-      ":val": item.Code,
-      ":at": { S: body.animalType },
-      ":g": { S: body.gender },
-    },
-    updateExpression: `SET #c=:val, `,
-    expressionAttributeNames: {
-      "#c": "Code",
-      "#at": "AnimalType",
-      "#g": "Gender",
-    },
-  });
-  await upsert({
-    table: "Session",
-    key: { Id: item.Id, Type: { S: "Session" } },
-    expressionAttributeValues: {
-      ":val": item.Code,
-      ":at": { S: body.animalType },
-      ":g": { S: body.gender },
-    },
-    updateExpression: `SET #c=:val, `,
-    expressionAttributeNames: {
-      "#c": "Code",
-      "#at": "AnimalType",
-      "#g": "Gender",
-    },
-  });
+
+  await createSession(session);
 
   return {
     statusCode: 200,
-    body: JSON.stringify({
-      code: body.code,
-      id: item.Id.S,
-      gender: body.gender,
-      animalType: body.animalType,
-    }),
+    body: JSON.stringify(session),
   };
 };
 
-export const getSessionHandler = async (
+export const getSessionByCodeHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   const params = event.pathParameters;
 
-  if (!params || !params.sessionId) {
-    return { statusCode: 400, body: '{"error": "sessionId missing"}' };
+  if (!params || !params.code) {
+    return { statusCode: 400, body: '{"error": "code missing"}' };
   }
 
-  const res = await query({
-    ExpressionAttributeValues: {
-      ":id": {
-        S: params.sessionId,
-      },
-    },
-    KeyConditionExpression: "Id = :id",
-    TableName: "Session",
-  });
-
-  const response = {} as {
-    id: string;
-    code: string;
-    users: {
-      requester: { name: string; id: string };
-      addressee?: { name: string; id: string };
-    };
-    likes: ListOfLikes;
-  };
-
-  const session = res.Items?.find((item) => item.Type.S === "Session");
+  const session = await getSessionByCode(params.code);
 
   if (!session) {
     return {
@@ -114,31 +66,49 @@ export const getSessionHandler = async (
     };
   }
 
-  response.id = session.Id.S ?? "";
-  response.code = session.Code.S ?? "";
+  const addressee = session.addresseeId
+    ? await getUser(session.addresseeId)
+    : null;
+  const requester = session.requesterId
+    ? await getUser(session.requesterId)
+    : null;
 
-  res.Items?.forEach((item) => {
-    if (item.Type.S === "User") {
-      if (item.Id.S === session.RequesterId.S) {
-        response.users.requester = {
-          name: item.Name.S ?? "",
-          id: item.Id.S ?? "",
-        };
-      } else {
-        response.users.addressee = {
-          name: item.Name.S ?? "",
-          id: item.Id.S ?? "",
-        };
-      }
-    }
-    if (item.Type.S === "Like") {
-      response.likes.push({
-        name: item.Name.S ?? "",
-        adresseeLike: item.AddresseeLike.BOOL,
-        requesterLike: item.RequesterLike.BOOL,
-      });
-    }
-  });
+  const response = { users: { requester, addressee }, ...session };
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(response),
+  };
+};
+
+export const getSessionByIdHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  const params = event.pathParameters;
+
+  if (!params || !params.id) {
+    return { statusCode: 400, body: '{"error": "id missing"}' };
+  }
+
+  const session = await getSessionById(params.id);
+
+  if (!session) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        error: "no session",
+      }),
+    };
+  }
+
+  const addressee = session.addresseeId
+    ? await getUser(session.addresseeId)
+    : null;
+  const requester = session.requesterId
+    ? await getUser(session.requesterId)
+    : null;
+
+  const response = { users: { requester, addressee }, ...session };
 
   return {
     statusCode: 200,

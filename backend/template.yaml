@@ -52,10 +52,10 @@ Resources:
         EntryPoints:
           - src/handlers/session.ts
 
-  getSessionFunction:
+  getSessionByCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/session.getSessionHandler
+      Handler: src/handlers/session.getSessionByCodeHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -66,7 +66,41 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /{sessionId}
+            Path: /code/{code}
+            Method: GET
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        External:
+          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-dynamodb"
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/session.ts
+
+  getSessionByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/session.getSessionByIdHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /{id}
             Method: GET
       Policies:
         - DynamoDBCrudPolicy:
@@ -101,40 +135,6 @@ Resources:
           Type: Api
           Properties:
             Path: /user
-            Method: PUT
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Format: esm
-        Minify: false
-        External:
-          - "@aws-sdk/lib-dynamodb"
-          - "@aws-sdk/client-dynamodb"
-        OutExtension:
-          - .js=.mjs
-        Target: "es2020"
-        Sourcemap: true
-        EntryPoints:
-          - src/handlers/create-user.ts
-
-  acceptInviteFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/handlers/create-user.acceptInviteHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /user/accept_invite
             Method: PUT
       Policies:
         - DynamoDBCrudPolicy:

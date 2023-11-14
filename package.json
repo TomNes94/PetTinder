@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "ios": "cd ./app && yarn ios",
-    "server": "cd ./-backend && sam local start-api"
+    "server": "cd ./backend && sam local start-api",
+    "local:db": "docker run -d -p 8000:8000 amazon/dynamodb-local && sh ./bootstrap-local-db.sh"
   },
   "repository": {
     "type": "git",

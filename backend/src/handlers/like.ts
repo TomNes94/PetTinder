@@ -1,15 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { query } from "../storage/query";
-import { upsert } from "../storage/put";
-import { z } from "zod";
-import { getLikeList } from "../common/getLikeList";
-
-const SetLikeSchema = z.object({
-  sessionId: z.string(),
-  name: z.string(),
-  userId: z.string(),
-  like: z.boolean(),
-});
+import { getLikeList } from "../services/likes/getLikeList";
+import { SetLikeSchema } from "../validation/setLike";
+import { getSessionById } from "../services/sessions/getSession";
+import { setLike } from "../services/likes/setLike";
 
 export const setLikeHandler = async (
   event: APIGatewayProxyEvent
@@ -25,37 +18,21 @@ export const setLikeHandler = async (
     };
   }
 
-  const setLike = SetLikeSchema.safeParse(JSON.parse(body));
+  const setLikeBody = SetLikeSchema.safeParse(JSON.parse(body));
 
-  if (!setLike.success) {
+  if (!setLikeBody.success) {
     return {
       statusCode: 400,
       body: JSON.stringify({
-        error: "Invalid request",
+        error: setLikeBody.error,
       }),
     };
   }
 
-  const { sessionId, name, userId, like } = setLike.data;
+  const { sessionId, name, userId, like } = setLikeBody.data;
 
-  const sessionQuery = await query({
-    TableName: "Session",
-    KeyConditionExpression: "Id = :sessionId AND #t=:t",
-    ExpressionAttributeValues: {
-      ":sessionId": {
-        S: sessionId,
-      },
-      ":t": {
-        S: "Session",
-      },
-    },
-    ExpressionAttributeNames: {
-      "#t": "Type",
-    },
-    Limit: 1,
-  });
+  const session = await getSessionById(sessionId);
 
-  const session = sessionQuery.Items?.[0];
   if (!session) {
     return {
       statusCode: 400,
@@ -65,42 +42,12 @@ export const setLikeHandler = async (
     };
   }
 
-  const isRequester = session.RequesterId?.S === userId;
-  const Like = isRequester
-    ? {
-        RequesterLike: {
-          BOOL: like,
-        },
-      }
-    : {
-        AddresseeLike: {
-          BOOL: like,
-        },
-      };
-
-  await upsert({
-    table: "Session",
-    key: {
-      Id: {
-        S: sessionId,
-      },
-      Type: {
-        S: "Like",
-      },
-    },
-    expressionAttributeNames: { "#n": "Name" },
-    expressionAttributeValues: {
-      ":n": { S: name },
-      ":l": {
-        BOOL: Like.RequesterLike
-          ? Like.RequesterLike.BOOL
-          : Like.AddresseeLike.BOOL,
-      },
-    },
-    updateExpression: `SET ${
-      isRequester ? "RequesterLike" : "AddresseeLike"
-    } = :l, #n = :n`,
-  });
+  await setLike(
+    { id: sessionId, requesterId: session.requesterId },
+    like,
+    userId,
+    name
+  );
 
   const likeList = await getLikeList(sessionId);
 

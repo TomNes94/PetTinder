@@ -1,4 +1,4 @@
-import { query } from "../storage/query";
+import { query } from "../../storage/query";
 
 export const getLikeList = async (sessionId: string) => {
   const queryResult = await query({
@@ -16,8 +16,8 @@ export const getLikeList = async (sessionId: string) => {
   });
 
   return (queryResult.Items ?? []).map((like) => ({
-    requesterLike: like.RequesterLike.BOOL,
-    addresseeLike: like.AddresseeLike.BOOL,
+    requesterLike: like.RequesterLike?.BOOL ?? null,
+    addresseeLike: like.AddresseeLike?.BOOL ?? null,
     name: like.Name.S,
   }));
 };
