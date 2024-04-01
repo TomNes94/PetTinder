@@ -1,27 +1,15 @@
-# This is the SAM template that represents the architecture of your serverless application
-# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
-
-# The AWSTemplateFormatVersion identifies the capabilities of the template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   pet-tinder-backend
 
-# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
   - AWS::Serverless-2016-10-31
 
-# Resources declares the AWS resources that you want to include in the stack
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-
   postCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/session.postCodeHandler
+      Handler: src/session/session-handler.postCodeHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -50,12 +38,14 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/session.ts
+          - src/session/session-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   getSessionByCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/session.getSessionByCodeHandler
+      Handler: src/session/session-handler.getSessionByCodeHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -84,12 +74,14 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/session.ts
+          - src/session/session-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   getSessionByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/session.getSessionByIdHandler
+      Handler: src/session/session-handler.getSessionByIdHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -118,12 +110,14 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/session.ts
+          - src/session/session-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   createUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/create-user.createUserHandler
+      Handler: src/user/user-handler.createUserHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -152,12 +146,14 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/create-user.ts
+          - src/user/user-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   getLikesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/like.getLikeHandler
+      Handler: src/likes/like-handler.getLikeHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -186,12 +182,14 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/like.ts
+          - src/likes/like-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   setLikeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/like.setLikeHandler
+      Handler: src/likes/like-handler.setLikeHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -220,7 +218,9 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/like.ts
+          - src/likes/like-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 
   SessionTable:
     Type: AWS::DynamoDB::Table

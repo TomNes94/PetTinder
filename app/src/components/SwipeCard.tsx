@@ -14,9 +14,10 @@ import Animated, {
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const SwipeableCard = ({
+  name,
   children,
   onSwipeOff,
-}: PropsWithChildren<{onSwipeOff: () => void}>) => {
+}: PropsWithChildren<{onSwipeOff: () => void; name: string}>) => {
   const translateX = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
@@ -56,7 +57,7 @@ const SwipeableCard = ({
       }
     },
   });
-  console.log(translateX.value);
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{translateX: translateX.value}],

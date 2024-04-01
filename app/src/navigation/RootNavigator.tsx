@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import AnimalOnboardingPage from '../pages/onboarding/AnimalOnboardingPage';
+import AnimalOnboardingPage from '../onboarding/aninal/AnimalOnboardingPage';
 import ConnectionPage from '../pages/onboarding/ConnectionPage';
 import NameOnboardingPage from '../pages/onboarding/NameOnboardingPage';
 import SwipePage from '../pages/gallery/SwipePage';
@@ -27,41 +27,42 @@ export type RootStackParamList = {
 };
 
 const RootNavigator = () => {
-  const {data: sessionId, isLoading} = useQuery(['sessionId'], () =>
-    AsyncStorage.getItem('sessionId'),
-  );
-  const {data: userId} = useQuery(['userId'], () =>
-    AsyncStorage.getItem('userId'),
-  );
+  const {data: sessionId, isLoading} = useQuery({
+    queryKey: ['sessionId'],
+    queryFn: () => AsyncStorage.getItem('sessionId'),
+  });
+  const {data: userId} = useQuery({
+    queryKey: ['userId'],
+    queryFn: () => AsyncStorage.getItem('userId'),
+  });
 
-  const {data: session, isLoading: isLoadingSession} = useQuery(
-    ['session', sessionId],
-    () => getSessionById(sessionId ?? ''),
-    {
-      enabled: !!sessionId,
-    },
-  );
+  const {data: session, isLoading: isLoadingSession} = useQuery({
+    queryKey: ['session', sessionId],
+    queryFn: () => getSessionById(sessionId ?? ''),
 
+    enabled: !!sessionId,
+  });
   if (isLoading || (isLoadingSession && !!sessionId)) {
     return <ActivityIndicator />;
   }
+
   const user =
     !userId || !session
       ? null
       : session?.data.users?.addressee?.id === userId
-      ? session.data.users.addressee
-      : session?.data.users?.requester?.id === userId
-      ? session?.data.users?.requester
-      : null;
+        ? session.data.users.addressee
+        : session?.data.users?.requester?.id === userId
+          ? session?.data.users?.requester
+          : null;
 
   const initialRouteName = !sessionId
     ? Pages.ANIMAL_ONBOARDING
     : !user
-    ? Pages.NAME_ONBOARDING
-    : user.id === session?.data.users.requester.id &&
-      !session?.data.users?.addressee
-    ? Pages.CONNECTION
-    : Pages.SWIPE;
+      ? Pages.NAME_ONBOARDING
+      : user.id === session?.data.users.requester.id &&
+          !session?.data.users?.addressee
+        ? Pages.CONNECTION
+        : Pages.SWIPE;
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>

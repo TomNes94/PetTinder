@@ -23,24 +23,28 @@ const NameOnboardingPage = ({navigation}: OnboardingPageProps) => {
 
   const queryClient = useQueryClient();
 
-  const {data: sessionId} = useQuery(['sessionId'], () =>
-    AsyncStorage.getItem('sessionId'),
-  );
-  const {data: code} = useQuery(['code'], () => AsyncStorage.getItem('code'));
+  const {data: sessionId} = useQuery({
+    queryKey: ['sessionId'],
+    queryFn: () => AsyncStorage.getItem('sessionId'),
+  });
+  const {data: code} = useQuery({
+    queryKey: ['code'],
+    queryFn: () => AsyncStorage.getItem('code'),
+  });
 
-  const {data: session} = useQuery(
-    ['session', sessionId],
-    () => getSessionById(sessionId ?? ''),
-    {
-      enabled: !!sessionId,
-    },
-  );
+  const {data: session} = useQuery({
+    queryKey: ['session', sessionId],
+    queryFn: () => getSessionById(sessionId ?? ''),
 
-  const mutation = useMutation(putUser, {
+    enabled: !!sessionId,
+  });
+
+  const mutation = useMutation({
+    mutationFn: putUser,
     onSuccess: async data => {
       await AsyncStorage.setItem('userId', data.data.id);
       queryClient.setQueryData(['user'], data);
-      queryClient.invalidateQueries(['user']);
+      queryClient.invalidateQueries({queryKey: ['user']});
     },
   });
 

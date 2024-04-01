@@ -10,7 +10,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "exclude": ["node_modules", "**/*.test.ts"]
 }
