@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.540.0",
+    "electrodb": "^2.13.1",
     "esbuild": "^0.20.2",
     "nanoid": "^5.0.6",
     "pino": "^8.19.0",

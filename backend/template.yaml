@@ -227,7 +227,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: Session
+      TableName: electro
       AttributeDefinitions:
         - AttributeName: Id
           AttributeType: S

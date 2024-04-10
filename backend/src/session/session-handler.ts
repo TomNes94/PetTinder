@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { sessionController } from "./session.controller";
 import { transformResponse } from "../utils/transform-response";
+import { createLogger } from "utils/logger";
 
 export const postCodeHandler = async (
   event: APIGatewayProxyEvent
@@ -27,7 +28,7 @@ export const getSessionByCodeHandler = async (
   if (!params) {
     return { statusCode: 400, body: '{"error": "code missing"}' };
   }
-
+  createLogger("getSessionByCodeHandler").info("params", params);
   return await transformResponse(() =>
     sessionController.getSessionByCode(params)
   );
